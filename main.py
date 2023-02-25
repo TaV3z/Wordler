@@ -1,5 +1,4 @@
 #!/bin/env python
-
 import json
 import time
 
@@ -78,8 +77,12 @@ def add(word, context=""):
 @click.option('-f', '--fmt', default='names', type=click.Choice(['names', 'all']))
 def status(order, fmt):
     if order == 'alphabet' and fmt == 'names':
-        for n in sorted(list(WORDS.keys())):
-            click.echo(n)
+        indent = max(map(len, WORDS.keys()))
+        for el in sorted(list(WORDS.keys())):
+            word_with_indent = el.ljust(indent)
+            word_status = click.style("anki", fg='blue') if WORDS[el]['count'] >= 5 else "in progress"
+            word_with_status = f"{word_with_indent} | {word_status}"
+            click.echo(word_with_status)
     elif fmt == "all":
         # TODO: 
         # - Жёстко отрефакторить этот кусок и обязательно с flush или аналогом
