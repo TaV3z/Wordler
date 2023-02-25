@@ -1,0 +1,4 @@
+config.json
+words.json
+venv/
+__pycache__/
