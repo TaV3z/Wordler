@@ -51,18 +51,20 @@ def add(word, context=""):
     word = word.lower()
     color_word = click.style(f"'{word}'", fg='blue')
 
+    context = " ".join(context) if context else ""
+
     if word in WORDS.keys():
         WORDS[word]['count'] += 1
+        if context:
+            WORDS[word]['context'].append(context)
 
         click.echo(f"Word {color_word} has been updated!")
     else: 
-        context = [" ".join(context)] if context else []
-
         WORDS.update({
                 word: {
                     'count': 1,
                     'create': int(time.time()),
-                    'context': context,
+                    'context': [context] if context else [],
                 }
             }
         )
