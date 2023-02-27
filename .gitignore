@@ -1,4 +1,7 @@
 config.json
 words.json
+test.json
+unuse.py
+TODO.md
 venv/
 __pycache__/
