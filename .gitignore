@@ -3,5 +3,6 @@ words.json
 test.json
 unuse.py
 TODO.md
+test/
 venv/
 __pycache__/
