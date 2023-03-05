@@ -33,9 +33,11 @@ def check_all_counts():
 
     return "No words to anki" if not anki_words else "\n".join(anki_words)
 
+
 def check_word_count(word):
     if WORDS[word]['count'] >= 5:
         click.echo("This word is ready to memorize.")
+
 
 @click.group()
 # @click.option('-l', '--lst', default='name', type=click.Choice(['name', 'time']))
@@ -80,9 +82,17 @@ def add(word, context=""):
 
 
 def output(el, indent):
+
+    if WORDS[el]['count'] >= 5:
+        word_status = click.style("anki", fg='blue')
+    elif (int(time.time()) - WORDS[el]['create']) // 86400 >= 7:
+        word_status = click.style("deprecated", fg='red')
+    else: 
+        word_status = "in progress"
+
     word_with_indent = el.ljust(indent)
-    word_status = click.style("anki", fg='blue') if WORDS[el]['count'] >= 5 else "in progress"
     word_with_status = f"{word_with_indent} | {word_status}"
+
     click.echo(word_with_status)
 
 
@@ -116,7 +126,7 @@ def status(order, fmt):
 
 @cli.command()
 @click.argument('word')
-def rename(word):
+def rm(word):
     color_word = click.style(f"'{word}'", fg='red')
     try:
         del WORDS[word]
@@ -130,7 +140,7 @@ def rename(word):
 @cli.command()
 @click.argument('old_word')
 @click.argument('new_word')
-def mv(old_word, new_word):
+def rename(old_word, new_word):
     color_new_word = click.style(f"'{new_word}'", fg='blue')
     color_old_word = click.style(f"'{old_word}'", fg='red')
     try:
