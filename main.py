@@ -12,26 +12,22 @@ def upload_words():
 
 # TODO:
 # - Игнорировать слова с ready = True
-def check_time():
+def check_time(word):
     current_time = int(time.time())
-    outdated_words = []
 
-    for word in WORDS:
-        if (current_time - WORDS[word]['create']) // 86400 >= 7:
-            outdated_words.append(word)
+    if (current_time - WORDS[word]['create']) // 86400 >= 7:
+        return True
 
-    return "No words to delete" if not outdated_words else "\n".join(outdated_words)
+    return False
 
 
-def check_all_counts():
+def check_anki(word):
     COUNT = 5
-    anki_words = []
 
-    for word in WORDS:
-        if WORDS[word]['count'] == COUNT:
-            anki_words.append(word)
+    if WORDS[word]['count'] == COUNT:
+        return True
 
-    return "No words to anki" if not anki_words else "\n".join(anki_words)
+    return False
 
 
 def check_word_count(word):
@@ -83,9 +79,9 @@ def add(word, context=""):
 
 def output(el, indent):
 
-    if WORDS[el]['count'] >= 5:
+    if check_anki(el):
         word_status = click.style("anki", fg='blue')
-    elif (int(time.time()) - WORDS[el]['create']) // 86400 >= 7:
+    elif check_time(el):
         word_status = click.style("deprecated", fg='red')
     else: 
         word_status = "in progress"
@@ -128,6 +124,7 @@ def status(order, fmt):
 @click.argument('word')
 def rm(word):
     color_word = click.style(f"'{word}'", fg='red')
+
     try:
         del WORDS[word]
         upload_words()
@@ -143,6 +140,7 @@ def rm(word):
 def rename(old_word, new_word):
     color_new_word = click.style(f"'{new_word}'", fg='blue')
     color_old_word = click.style(f"'{old_word}'", fg='red')
+
     try:
         WORDS.update({new_word: WORDS.pop(old_word)})
         upload_words()
