@@ -1,8 +1,13 @@
 #!/bin/env python
 import json
 import time
+import subprocess
 
 import click
+from lib.connect import invoke
+
+
+COUNT = 3
 
 
 def upload_words():
@@ -22,17 +27,9 @@ def check_time(word):
 
 
 def check_anki(word):
-    COUNT = 5
 
-    if WORDS[word]['count'] == COUNT:
+    if WORDS[word]['count'] >= COUNT:
         return True
-
-    return False
-
-
-def check_word_count(word):
-    if WORDS[word]['count'] >= 5:
-        click.echo("This word is ready to memorize.")
 
 
 @click.group()
@@ -61,7 +58,11 @@ def add(word, context=""):
             WORDS[word]['context'].append(context)
 
         click.echo(f"Word {color_word} has been updated!")
-        check_word_count(word)
+
+        # TODO: Этот кусок нужно вызывать здесь и перед увеличением счётчика count. Во втором случае предовращать логику увеличения счётчика. (Можно сделать автоматическое добавление в anki если он запущен, в противном случае отложить до включения (как?))
+        if check_anki(word):
+            click.echo("This word is ready to memorize.") 
+
     else: 
         WORDS.update({
                 word: {
@@ -150,8 +151,42 @@ def rename(old_word, new_word):
         click.echo(f"There is no {color_old_word} here :(")
 
 
+# Temporary function. Still alive while anki integration doesn't implement.
+@cli.command()
+@click.argument('word')
+def copy(word):
+    color_copy_word = click.style(f"'{word}'", fg='yellow')
+    try:
+        context = WORDS[word]['context']
+        if context:
+            cmd = f'echo -n {context[0].strip()} | xclip -selection clipboard'
+            subprocess.check_call(cmd, shell=True)
+
+            click.echo(f"Context of {color_copy_word} has been copied.")
+        else:
+            click.echo(f"{color_copy_word} doesn't have any context.")
+    except Exception as e:
+        click.echo(f"There is no {color_copy_word} here :(")
+
+
+@cli.command()
+def sync():
+
+    # note = {
+    #         'deckName': 'testDeck',
+    #         'modelName': 'Basic',
+    #         'fields': {
+    #             'Front': 'Hey, I\'m front',
+    #             'Back': 'Hey, I\'m back',
+    #         },
+    # }
+    # invoke('addNote', note=note)
+
+    ...
+
+
 if __name__ == '__main__':
-    FILENAME = 'words.json'
+    FILENAME = 'test.json'
     try:
         with open(FILENAME) as f:
             WORDS = json.loads(f.read())
