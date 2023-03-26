@@ -4,6 +4,7 @@ import time
 import subprocess
 
 import click
+from lib.translate_mod import translate
 from lib.connect import invoke
 
 
@@ -33,11 +34,7 @@ def check_anki(word):
 
 
 @click.group()
-# @click.option('-l', '--lst', default='name', type=click.Choice(['name', 'time']))
-# @click.option('-a', '--add')
 def cli():
-    # click.echo(check_time())
-    # click.echo(check_count())
     pass
 
 
@@ -55,7 +52,9 @@ def add(word, context=""):
         WORDS[word]['count'] += 1
 
         if context:
-            WORDS[word]['context'].append(context)
+            context_color = click.style(context, fg="yellow")
+            click.confirm(f"You already have a context of this word:\n\n{context_color}\n\nDo you want to overwrite it? ", abort=True)
+            WORDS[word]['context'] = context
 
         click.echo(f"Word {color_word} has been updated!")
 
@@ -68,7 +67,7 @@ def add(word, context=""):
                 word: {
                     'count': 1,
                     'create': int(time.time()),
-                    'context': [context] if context else [],
+                    'context': context if context else '',
                 }
             }
         )
@@ -91,6 +90,19 @@ def output(el, indent):
     word_with_status = f"{word_with_indent} | {word_status}"
 
     click.echo(word_with_status)
+
+
+# TODO: 
+# - Use error handlers and transport upload_words at the end of if block
+@cli.command()
+def clear():
+    for word in WORDS.copy():
+        if check_time(word) and not check_anki(word):
+            del WORDS[word]
+            word = click.style(word, fg='red')
+            click.echo(f"Word {word} deleted because it was deprecated.")
+
+    upload_words()
 
 
 @cli.command()
@@ -169,24 +181,49 @@ def copy(word):
         click.echo(f"There is no {color_copy_word} here :(")
 
 
-@cli.command()
+@cli.command
 def sync():
+    invoke('createDeck', deck="Wordler")
 
-    # note = {
-    #         'deckName': 'testDeck',
-    #         'modelName': 'Basic',
-    #         'fields': {
-    #             'Front': 'Hey, I\'m front',
-    #             'Back': 'Hey, I\'m back',
-    #         },
-    # }
-    # invoke('addNote', note=note)
+    deck = f"Wordler::{time.asctime()}"
+    # TODO:
+    # There can be an empty deck.
+    invoke('createDeck', deck=deck)
 
-    ...
+    for word in WORDS.copy():
+        if check_anki(word):
+            transmit_to_anki(word, deck)
+            del WORDS[word]
+
+    upload_words()
+    click.echo("All words were successfully transmitted.")
+
+
+def transmit_to_anki(word, deck):
+    model = 'English card'
+    context = WORDS[word]['context'][0]
+
+
+    note = {
+            'deckName': deck,
+            'modelName': model,
+            'fields': {
+                'Лицо': word,
+                'Контекст': context,
+                'Оборот': translate(word),
+            }
+    }
+
+    try: 
+        invoke('addNote', note=note)
+    except Exception as e:
+        print(f"Something goes wrong!\n{e}")
 
 
 if __name__ == '__main__':
-    FILENAME = 'test.json'
+    # FILENAME = 'test.json'
+    FILENAME = 'words.json'
+
     try:
         with open(FILENAME) as f:
             WORDS = json.loads(f.read())
