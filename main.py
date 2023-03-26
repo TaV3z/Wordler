@@ -201,7 +201,7 @@ def sync():
 
 def transmit_to_anki(word, deck):
     model = 'English card'
-    context = WORDS[word]['context'][0]
+    context = WORDS[word]['context']
 
 
     note = {
