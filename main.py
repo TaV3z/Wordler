@@ -104,24 +104,14 @@ def clear():
 
 
 @cli.command()
-@click.option('-o', '--order', default='alphabet', type=click.Choice(['alphabet', 'time']))
 @click.option('-f', '--fmt', default='names', type=click.Choice(['names', 'all']))
 def status(order, fmt):
     try:
         indent = max(map(len, WORDS.keys()))
 
         if fmt == 'names':
-            if order == 'alphabet':
-                for el in sorted(list(WORDS.keys())):
-                    output(el, indent)
-            elif order == 'time':
-            # Holy shit
-                time_lst = sorted([WORDS[word]['create'] for word in WORDS.keys()])
-                for el in time_lst:
-                    for word in WORDS.keys():
-                        if WORDS[word]['create'] == el:
-                            output(word, indent)
-                            break
+            for el in sorted(list(WORDS.keys())):
+                output(el, indent)
         elif fmt == "all":
             # TODO: 
             # - Жёстко отрефакторить этот кусок и обязательно с flush или аналогом
