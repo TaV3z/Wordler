@@ -16,8 +16,6 @@ def upload_words():
         f.write(json.dumps(WORDS, indent=4))
 
 
-# TODO:
-# - Игнорировать слова с ready = True
 def check_time(word):
     current_time = int(time.time())
 
@@ -52,7 +50,7 @@ def add(word, context=""):
         WORDS[word]['count'] += 1
 
         if context:
-            context_color = click.style(context, fg="yellow")
+            context_color = click.style(f"\"{WORDS[word]['context']}\"", fg="yellow")
             click.confirm(f"You already have a context of this word:\n\n{context_color}\n\nDo you want to overwrite it? ", abort=True)
             WORDS[word]['context'] = context
 
@@ -106,7 +104,7 @@ def clear():
 
 
 @cli.command()
-@click.option('-o', '--order', default='time', type=click.Choice(['alphabet', 'time']))
+@click.option('-o', '--order', default='alphabet', type=click.Choice(['alphabet', 'time']))
 @click.option('-f', '--fmt', default='names', type=click.Choice(['names', 'all']))
 def status(order, fmt):
     try:
@@ -171,7 +169,7 @@ def copy(word):
     try:
         context = WORDS[word]['context']
         if context:
-            cmd = f'echo -n {context[0].strip()} | xclip -selection clipboard'
+            cmd = f'echo -n {context.strip()} | xclip -selection clipboard'
             subprocess.check_call(cmd, shell=True)
 
             click.echo(f"Context of {color_copy_word} has been copied.")
@@ -183,7 +181,14 @@ def copy(word):
 
 @cli.command
 def sync():
-    invoke('createDeck', deck="Wordler")
+    # TODO:
+    # All code after this e-handler doesn't wait until it ends
+    try:
+        invoke('createDeck', deck="Wordler")
+    except:
+        cmd = f'anki &'
+        subprocess.check_call(cmd, shell=True)
+
 
     deck = f"Wordler::{time.asctime()}"
     # TODO:
