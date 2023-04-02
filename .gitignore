@@ -3,6 +3,9 @@ words.json
 test.json
 unuse.py
 TODO.md
+
+.stignore
+
 test/
 venv/
 __pycache__/
