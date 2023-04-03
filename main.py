@@ -78,14 +78,15 @@ def add(word, context=""):
 def output(el, indent):
 
     if check_anki(el):
-        word_status = click.style("anki", fg='blue')
+        word_status = click.style("anki".ljust(11), fg='blue')
     elif check_time(el):
-        word_status = click.style("deprecated", fg='red')
+        word_status = click.style("deprecated".ljust(11), fg='red')
     else: 
         word_status = "in progress"
 
     word_with_indent = el.ljust(indent)
-    word_with_status = f"{word_with_indent} | {word_status}"
+    word_context = "+".center(7) if WORDS[el]["context"] else "-".center(7)
+    word_with_status = f"{word_with_indent} | {word_status} | {word_context}"
 
     click.echo(word_with_status)
 
@@ -105,9 +106,12 @@ def clear():
 
 @cli.command()
 @click.option('-f', '--fmt', default='names', type=click.Choice(['names', 'all']))
-def status(order, fmt):
+def status(fmt):
     try:
         indent = max(map(len, WORDS.keys()))
+        title = f"{'word'.ljust(indent)} | {'state'.ljust(11)} | context"
+        click.echo(title)
+        click.echo('-' * len(title))
 
         if fmt == 'names':
             for el in sorted(list(WORDS.keys())):
